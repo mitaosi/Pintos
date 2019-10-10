@@ -8,8 +8,8 @@
 
 >> Fill in the names and email addresses of your group members.
 
-FirstName LastName <email@domain.example>
-FirstName LastName <email@domain.example>
+Adam Jenderbo gusjendad@student.gu.se
+Qing Lin guslinqi@student.gu.se
 
 ---- PRELIMINARIES ----
 
@@ -19,6 +19,8 @@ FirstName LastName <email@domain.example>
 >> Please cite any offline or online sources you consulted while
 >> preparing your submission, other than the Pintos documentation, course
 >> text, lecture notes, and course instructors.
+
+Stackoverflow, Geeksforgeeks.org, Advanced Programming in the UNIX Enviroment
 
 			   COMMAND SHELL
 			   =============
@@ -31,9 +33,16 @@ which parts.
 
 >> L1: How many hours did each team member spend on this assignment?
    Make sure that each member's total time is listed.
+   Adam 20 h
+   Qing 20 h
+
 
 >> L2: What did each team member focus on for this assignment?  Keep
    descriptions to 25-30 words or less.
+   Adam has been focusing on specification 1-4.
+   Qing has been focusing on specification 5,6. 	
+
+
 
 
 			  SURVEY QUESTIONS
@@ -47,19 +56,25 @@ penalized.  We can't fix things until we know about them.  :-)
 
 >> In your opinion, was this assignment, or any of the parts of it, too
 >> easy or too hard?  Did it take too long or too little time?
+It took a lot of time to understand the assignment because you need to get a good understanding of UNIX system. It will be better if the assignment was published earlier. Some of the PDFs might need some updating.
 
 >> Did you find that working on a particular part of the assignment gave
 >> you greater insight into some aspect of OS design?
+The assignment gave a good insight to pipes.
 
 >> Were there any parts of the assignment that you felt were unnecessarily
 >> tedious or pointless?
+No.
 
 >> Is there some particular fact or hint we should give students in
 >> future quarters to help them solve the problems?  Conversely, did you
 >> find any of our guidance to be misleading?
+No.
 
 >> Do you have any suggestions for the instructor and/or TAs to more
 >> effectively assist students, either for future quarters or the remaining
 >> projects?
+No.
 
 >> Any other comments?
+No.

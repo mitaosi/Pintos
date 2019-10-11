@@ -70,6 +70,24 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+void check_blocked_thread (struct thread *t, void *aux UNUSED);
+
+
+/* Check  the blocked thread,  this function running when the current 
+thread is been blocked and block waiting time is great than 0.  when the block 
+waitting time is reduced to under 0,  thread will be put in ready queue  */
+void
+check_blocked_thread (struct thread *t, void *aux  UNUSED)
+{
+    if(t->status == THREAD_BLOCKED && t-> ticks_blocked >0 )
+    {
+          t->ticks_blocked--;
+          if(t->ticks_blocked == 0)
+          {
+              thread_unblock(t);
+          }
+    }
+}
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -123,7 +141,7 @@ void
 thread_tick (void) 
 {
   struct thread *t = thread_current ();
-
+  enum intr_level old_level;
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -133,6 +151,12 @@ thread_tick (void)
 #endif
   else
     kernel_ticks++;
+
+/*  Disable interrupt and interate through all threads, then count down 
+the ticks for remained blocked time*/
+old_level = intr_disable();
+thread_foreach ((thread_action_func *)check_blocked_thread , NULL);
+intr_set_level (old_level);
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
@@ -468,6 +492,7 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
+  t->ticks_blocked = 0;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
 }

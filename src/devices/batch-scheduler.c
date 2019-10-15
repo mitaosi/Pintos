@@ -23,6 +23,16 @@ typedef struct {
 	int priority;
 } task_t;
 
+
+struct semaphore bus_slot; // keeps track of how many slots are occupied
+struct semaphore available;
+struct semaphore send_normal_prio;
+struct semaphore receive_normal_prio;
+static int current_dir;
+static int nr_priority_send;
+static int nr_priority_receive;
+
+
 void batchScheduler(unsigned int num_tasks_send, unsigned int num_task_receive,
         unsigned int num_priority_send, unsigned int num_priority_receive);
 
@@ -42,11 +52,18 @@ void oneTask(task_t task);/*Task requires to use the bus and executes methods be
 /* initializes semaphores */ 
 void init_bus(void){ 
  
-    random_init((unsigned int)123456789); 
-    
-    msg("NOT IMPLEMENTED");
-    /* FIXME implement */
+    random_init((unsigned int)123456789);
 
+    sema_init(&bus_slot, BUS_CAPACITY);
+    sema_init(&send_normal_prio, 1);
+    sema_down(&send_normal_prio);
+    sema_init(&receive_normal_prio, 1);
+    sema_down(&receive_normal_prio);
+    sema_init(&available, 1);
+
+    current_dir = -1;
+    nr_priority_send = 0;
+    nr_priority_receive = 0;
 }
 
 /*
@@ -63,8 +80,21 @@ void init_bus(void){
 void batchScheduler(unsigned int num_tasks_send, unsigned int num_task_receive,
         unsigned int num_priority_send, unsigned int num_priority_receive)
 {
-    msg("NOT IMPLEMENTED");
-    /* FIXME implement */
+     nr_priority_send = num_priority_send;
+     nr_priority_receive = num_priority_receive;
+
+     if(nr_priority_send) { sema_up(&send_normal_prio); }
+     if(nr_priority_receive) { sema_up(&receive_normal_prio); }
+
+     unsigned int i;
+     for(i = 0; i < num_tasks_send; i++)
+         thread_create("normal_send", PRI_DEFAULT, &senderTask, NULL);
+     for(i = 0; i < num_priority_send; i++)
+         thread_create("high_send", PRI_DEFAULT, &senderPriorityTask, NULL);
+     for(i = 0; i < num_task_receive; i++)
+         thread_create("normal_recieve", PRI_DEFAULT, &receiverTask, NULL);
+     for(i = 0; i < num_priority_receive; i++)
+         thread_create("high_recieve", PRI_DEFAULT, &receiverPriorityTask, NULL);
 }
 
 /* Normal task,  sending data to the accelerator */
@@ -93,29 +123,66 @@ void receiverPriorityTask(void *aux UNUSED){
 
 /* abstract task execution*/
 void oneTask(task_t task) {
+
   getSlot(task);
   transferData(task);
   leaveSlot(task);
+
 }
 
 
 /* task tries to get slot on the bus subsystem */
 void getSlot(task_t task) 
-{
-    msg("NOT IMPLEMENTED");
-    /* FIXME implement */
+{     
+     // if the direction isn't the same and the bus isn't empty, then wait
+     if(current_dir != task.direction && bus_slot.value < BUS_CAPACITY) 
+     {
+         sema_down(&available);
+     }
+
+     current_dir = task.direction;
+     
+     if(task.direction == SENDER)
+     {
+         if(task.priority == HIGH)
+         {
+              sema_down(&bus_slot); // get slot
+              nr_priority_send--;
+              if(nr_priority_send == 0) sema_up(&send_normal_prio); // no more high prio left
+         }
+         else if(task.priority == NORMAL)
+         {
+              sema_down(&send_normal_prio); // wait for high prio
+              sema_down(&bus_slot); // get slot
+              sema_up(&send_normal_prio);
+         }
+     }
+     else if(task.direction == RECEIVER)
+     {
+         if(task.priority == HIGH)
+         {
+              sema_down(&bus_slot); // get slot
+              nr_priority_receive--;
+              if(nr_priority_receive == 0) sema_up(&send_normal_prio); // no more high prio left
+         }
+         else if(task.priority == NORMAL)
+         {
+              sema_down(&receive_normal_prio); // wait for high prio
+              sema_down(&bus_slot); // get slot
+              sema_up(&receive_normal_prio);
+         }
+     }
 }
 
 /* task processes data on the bus send/receive */
-void transferData(task_t task) 
+void transferData(task_t task)
 {
-    msg("NOT IMPLEMENTED");
-    /* FIXME implement */
+    timer_sleep(random_ulong() % 10);
 }
 
 /* task releases the slot */
-void leaveSlot(task_t task) 
+void leaveSlot(task_t task)
 {
-    msg("NOT IMPLEMENTED");
-    /* FIXME implement */
+    sema_up(&bus_slot); // leaving the slot
+    if(bus_slot.value == BUS_CAPACITY) sema_up(&available); 
 }

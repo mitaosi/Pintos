@@ -1,0 +1,152 @@
+			+--------------------+
+			|    EDA092/DIT400   |
+			| LAB ASSIGNMENT 2:  |
+			| 	THREADS      |
+			|   DESIGN DOCUMENT  |
+			+--------------------+
+				   
+---- GROUP XX ----
+
+>> Fill in the group number, names and email addresses of your group members.
+
+Adam Jenderbo gusjendad@student.gu.se
+Qing   Lin               guslinqi@student.gu.se
+
+
+---- PRELIMINARIES ----
+
+>> If you have any preliminary comments on your submission, notes for the
+>> TAs, please give them here.
+
+>> Please cite any offline or online sources you consulted while
+>> preparing your submission, other than the Pintos documentation, course
+>> text, lecture notes, and course staff.
+
+Course lecture notes and slides
+
+			     ALARM CLOCK
+			     ===========
+
+---- DATA STRUCTURES ----
+
+>> A1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+In thread.h, structure member  int64_t  ticks_blocked; has been added into 
+struct thread{} , it is used to keep tracking of remaining time to block the 
+thread while this thread is sleeping. the value of it decreaced each tick. when
+the value turn to 0, this thread will be put into ready queue
+
+---- ALGORITHMS ----
+
+>> A2: Briefly describe what happens in a call to timer_sleep(),
+>> including the effects of the timer interrupt handler.
+
+In a call to timer_sleep() will set the current thread to sleep for give amount 
+ticks if its tick count>0, during sleeping the interrupt will be disabled, thread 
+will be blocked and enable interrupt again until tick count == 0, then the 
+thread will be unblocked.
+
+>> A3: What steps are taken to minimize the amount of time spent in
+>> the timer interrupt handler?
+
+Check the status of thread and only handle sleeping threads to avoid unnecessary
+CPU usage.
+
+---- SYNCHRONIZATION ----
+
+>> A4: How are race conditions avoided when multiple threads call
+>> timer_sleep() simultaneously?
+
+First, each thread are independent from other thread; Second, pintos is a single
+core OS which prevent all other threads from accessing the thread which is interrupt
+disabled.
+
+>> A5: How are race conditions avoided when a timer interrupt occurs
+>> during a call to timer_sleep()?
+
+we set the number of ticks(block time) after we disabled interrput of thread right 
+before calling thread_block(). this will prevent thread_block() being called before 
+remain blocked ticks of thread reduced to 0. all these actions could prevent race 
+conditions.
+
+---- RATIONALE ----
+
+>> A6: Why did you choose this design?  In what ways is it superior to
+>> another design you considered?
+
+It works and the logic is clear. We have studied about other ways, they 
+are not simple and clear as this design.
+
+			    BATCH SCHEDULING
+			    ================
+---- DATA STRUCTURES ----
+
+>> A1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, semaphore, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+---- SYNCHRONIZATION ----
+
+>> C1: How does your solution guarantee that no more that 3 tasks
+>> are using the bus in the same direction?
+
+We use a semaphore named "bus_slot" to tracking tasks using bus in 
+the same direction.
+
+>> C2: What prevents tasks from opposite directions from using the
+>> bus simultaneously?
+
+There are condition check mechanism to compare a new task's direction
+and directions of these tasks using  bus currently.  Semaphore will  be 
+released if the new task has same direction as on going tasks and the 
+bus is empty.  
+
+>> C3: How does your solution grant priority to high priority tasks over
+>> the waiting tasks in the same direction?
+
+When a low priority task requires to accessing bus, we will check if there 
+are high priority tasks using bus; A low priority task can only get accessed
+to bus when there isn't any high priority tasks using bus. 
+
+>> C4: How do you guarantee that despite having priority, high priority
+>> tasks do not start using the bus while there are still still using
+>> it in the oposite direction?
+
+Same as C2 part, we check both the priority of new task and the current 
+direction of tasks which using bus. if there are tasks using bus have oposite
+direction than the new task, then the new task has to wait untill these tasks
+finish.
+
+---- RATIONALE ----
+
+>> C6: Why did you choose this design? Did you consider other design 
+>> alternatives? In what ways is it superior to another design you considered?
+
+We like semaphore, it is easy to understand, clear and straight forward logics.
+just like trafic signals. furthermore, it works pretty well for such type of tasks.
+
+			   SURVEY QUESTIONS (optional)
+			   ===========================
+
+Answering these questions is optional, but it will help us improve the
+course in future quarters.  Feel free to tell us anything you
+want--these questions are just to spur your thoughts.  You may also
+choose to respond anonymously in the course evaluations at the end of
+the quarter.
+
+>> In your opinion, was this assignment, or any one of the three problems
+>> in it, too easy or too hard?  Did it take too long or too little time?
+
+>> Did you find that working on a particular part of the assignment gave
+>> you greater insight into some aspect of OS design?
+
+>> Is there some particular fact or hint we should give students in
+>> future quarters to help them solve the problems?  Conversely, did you
+>> find any of our guidance to be misleading?
+
+>> Do you have any suggestions for the TAs to more effectively assist
+>> students, either for future quarters?
+
+>> Any other comments?

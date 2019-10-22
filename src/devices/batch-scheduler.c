@@ -24,13 +24,14 @@ typedef struct {
 } task_t;
 
 
-struct semaphore bus_slot; // keeps track of how many slots are occupied
-struct semaphore available;
-struct semaphore send_normal_prio;
-struct semaphore receive_normal_prio;
-static int current_dir;
-static int nr_priority_send;
-static int nr_priority_receive;
+int occupied_slots;
+int current_direction;
+
+int waiters[2][2] = { {0,0}, {0,0} }; // array for counting normal and high prio tasks in both directions
+
+struct lock lock;
+
+struct condition var[2][2]; // condition variables for normal and high prio tasks in both directions
 
 
 void batchScheduler(unsigned int num_tasks_send, unsigned int num_task_receive,
@@ -54,7 +55,6 @@ void init_bus(void){
  
     random_init((unsigned int)123456789);
 
-<<<<<<< HEAD
     occupied_slots = 0;
     current_direction = -1;
 
@@ -64,18 +64,6 @@ void init_bus(void){
     cond_init(&var[SENDER][HIGH]);
     cond_init(&var[RECEIVER][NORMAL]);
     cond_init(&var[RECEIVER][HIGH]);    
-=======
-    sema_init(&bus_slot, BUS_CAPACITY);
-    sema_init(&send_normal_prio, 1);
-    sema_down(&send_normal_prio);
-    sema_init(&receive_normal_prio, 1);
-    sema_down(&receive_normal_prio);
-    sema_init(&available, 1);
-
-    current_dir = -1;
-    nr_priority_send = 0;
-    nr_priority_receive = 0;
->>>>>>> 0c805181dc032d96d2658d48eaca76a6134dae99
 }
 
 /*
@@ -92,26 +80,13 @@ void init_bus(void){
 void batchScheduler(unsigned int num_tasks_send, unsigned int num_task_receive,
         unsigned int num_priority_send, unsigned int num_priority_receive)
 {
-<<<<<<< HEAD
-=======
-     nr_priority_send = num_priority_send;
-     nr_priority_receive = num_priority_receive;
-
-     if(nr_priority_send) { sema_up(&send_normal_prio); }
-     if(nr_priority_receive) { sema_up(&receive_normal_prio); }
-
->>>>>>> 0c805181dc032d96d2658d48eaca76a6134dae99
      unsigned int i;
      for(i = 0; i < num_tasks_send; i++)
          thread_create("normal_send", PRI_DEFAULT, &senderTask, NULL);
      for(i = 0; i < num_priority_send; i++)
          thread_create("high_send", PRI_DEFAULT, &senderPriorityTask, NULL);
      for(i = 0; i < num_task_receive; i++)
-<<<<<<< HEAD
          thread_create("normal_receive", PRI_DEFAULT, &receiverTask, NULL);
-=======
-         thread_create("normal_recieve", PRI_DEFAULT, &receiverTask, NULL);
->>>>>>> 0c805181dc032d96d2658d48eaca76a6134dae99
      for(i = 0; i < num_priority_receive; i++)
          thread_create("high_recieve", PRI_DEFAULT, &receiverPriorityTask, NULL);
 }
@@ -152,7 +127,6 @@ void oneTask(task_t task) {
 
 /* task tries to get slot on the bus subsystem */
 void getSlot(task_t task) 
-<<<<<<< HEAD
 {
     lock_acquire(&lock);
     
@@ -175,47 +149,6 @@ void getSlot(task_t task)
     occupied_slots++;
 
     lock_release(&lock);
-=======
-{     
-     // if the direction isn't the same and the bus isn't empty, then wait
-     if(current_dir != task.direction && bus_slot.value < BUS_CAPACITY) 
-     {
-         sema_down(&available);
-     }
-
-     current_dir = task.direction;
-     
-     if(task.direction == SENDER)
-     {
-         if(task.priority == HIGH)
-         {
-              sema_down(&bus_slot); // get slot
-              nr_priority_send--;
-              if(nr_priority_send == 0) sema_up(&send_normal_prio); // no more high prio left
-         }
-         else if(task.priority == NORMAL)
-         {
-              sema_down(&send_normal_prio); // wait for high prio
-              sema_down(&bus_slot); // get slot
-              sema_up(&send_normal_prio);
-         }
-     }
-     else if(task.direction == RECEIVER)
-     {
-         if(task.priority == HIGH)
-         {
-              sema_down(&bus_slot); // get slot
-              nr_priority_receive--;
-              if(nr_priority_receive == 0) sema_up(&send_normal_prio); // no more high prio left
-         }
-         else if(task.priority == NORMAL)
-         {
-              sema_down(&receive_normal_prio); // wait for high prio
-              sema_down(&bus_slot); // get slot
-              sema_up(&receive_normal_prio);
-         }
-     }
->>>>>>> 0c805181dc032d96d2658d48eaca76a6134dae99
 }
 
 /* task processes data on the bus send/receive */
@@ -227,7 +160,6 @@ void transferData(task_t task)
 /* task releases the slot */
 void leaveSlot(task_t task)
 {
-<<<<<<< HEAD
      lock_acquire(&lock);
 
      occupied_slots--;
@@ -252,8 +184,4 @@ void leaveSlot(task_t task)
      }
 
      lock_release(&lock); 
-=======
-    sema_up(&bus_slot); // leaving the slot
-    if(bus_slot.value == BUS_CAPACITY) sema_up(&available); 
->>>>>>> 0c805181dc032d96d2658d48eaca76a6134dae99
 }

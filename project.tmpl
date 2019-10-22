@@ -5,13 +5,13 @@
 			|   DESIGN DOCUMENT  |
 			+--------------------+
 				   
----- GROUP 11 ----
+---- GROUP XX ----
 
 >> Fill in the group number, names and email addresses of your group members.
 
-Adam Jenderbo gusjendad@student.gu.se
-Qing Lin guslinqi@student.gu.se
-
+FirstName LastName <email@domain.example>
+FirstName LastName <email@domain.example>
+FirstName LastName <email@domain.example>
 
 ---- PRELIMINARIES ----
 
@@ -22,8 +22,6 @@ Qing Lin guslinqi@student.gu.se
 >> preparing your submission, other than the Pintos documentation, course
 >> text, lecture notes, and course staff.
 
-Course lecture notes and slides
-
 			     ALARM CLOCK
 			     ===========
 
@@ -33,51 +31,26 @@ Course lecture notes and slides
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
-In thread.h, structure member  int64_t  ticks_blocked; has been added into 
-struct thread{}. It is used to keep tracking of remaining time to block the 
-thread while this thread is sleeping. The value of it decreaced each tick. When
-the value turn to 0, this thread will be put into ready queue
-
 ---- ALGORITHMS ----
 
 >> A2: Briefly describe what happens in a call to timer_sleep(),
 >> including the effects of the timer interrupt handler.
 
-In a call to timer_sleep() will set the current thread to sleep for give amount 
-ticks if its tick count>0, during sleeping the interrupt will be disabled, thread 
-will be blocked and enable interrupt again until tick count == 0, then the 
-thread will be unblocked.
-
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
-
-Check the status of thread and only handle sleeping threads to avoid unnecessary
-CPU usage.
 
 ---- SYNCHRONIZATION ----
 
 >> A4: How are race conditions avoided when multiple threads call
 >> timer_sleep() simultaneously?
 
-First, each thread are independent from other thread; Second, pintos is a single
-core OS which prevent all other threads from accessing the thread which is interrupt
-disabled.
-
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
-
-We set the number of ticks(block time) after we disabled interrput of thread right 
-before calling thread_block(). This will prevent thread_block() being called before 
-remain blocked ticks of thread reduced to 0. All these actions could prevent race 
-conditions.
 
 ---- RATIONALE ----
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
-
-It works and the logic is clear. We have studied about other ways, they 
-are not simple and clear as this design.
 
 			    BATCH SCHEDULING
 			    ================
@@ -87,55 +60,25 @@ are not simple and clear as this design.
 >> `struct' member, global or static variable, semaphore, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
-int occupied_slots: Keeps track on how many tasks are using the bus.
-
-int current_direction: Keeps track of the current direction of the bus.
-
-int waiters[2][2]: Stores the number of waitng tasks, normal and high prio tasks in both directions.
-
-struct lock lock: Used when getting and leaving a slot. A thread releases the lock when it's waiting.
-
-struct condition var[2][2]: Conditions variables used to signal threads that are waiting.
-
 ---- SYNCHRONIZATION ----
 
 >> C1: How does your solution guarantee that no more that 3 tasks
 >> are using the bus in the same direction?
 
-If all slots are filled a thread is forced to wait. When slots are opened the thread will be signaled and does a re-check to see if there are still slots opened.
-
-
 >> C2: What prevents tasks from opposite directions from using the
 >> bus simultaneously?
 
-A task is forced to wait if the current direction of the bus is the opposite of the task and other tasks are currently using the bus.
-
-
 >> C3: How does your solution grant priority to high priority tasks over
 >> the waiting tasks in the same direction?
-
-When there are slots open on the bus waiting threads will be signaled. Different groups of thread will be signaled based on their priority. High prio will be signaled before normal tasks.
-This is done with the help of different condition variables.
-
 
 >> C4: How do you guarantee that despite having priority, high priority
 >> tasks do not start using the bus while there are still still using
 >> it in the oposite direction?
 
-All waiting tasks that are signaled are still required to make the same check refered to in C1 and C2 before actually getting a slot.
-
-
 ---- RATIONALE ----
 
 >> C6: Why did you choose this design? Did you consider other design 
 >> alternatives? In what ways is it superior to another design you considered?
-
-We first implemented a solution with semaphores. This solution did not count high prio threads during the execution. 
-After getting some feedback during the demonstraion we looked at the bridge problem and created another solution using monitor instead.
-
-Semaphores can be trickier to use than monitors. A good thing about monitors is that it takes some of the synchronization responsibility away from the programmer, 
-reducing the risk of the programmer making mistakes.
-
 
 
 			   SURVEY QUESTIONS (optional)

@@ -29,7 +29,7 @@
 #include "threads/synch.h"
 #include <stdio.h>
 #include <string.h>
-#include "threads/interrupt.h"
+#include "threads/interrupt.h"(task_t tas
 #include "threads/thread.h"
 
 /* Initializes semaphore SEMA to VALUE.  A semaphore is a
